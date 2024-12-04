@@ -81,25 +81,61 @@ def results():
 @app.route('/comparison_results')
 def comparison_results():
     """Displays the relative weather for 2 different cities."""
-    # TODO: Use 'request.args' to retrieve the cities & units from the query
-    # parameters.
-    city1 = ''
-    city2 = ''
-    units = ''
+    city1 = request.args.get('city1')
+    city2 = request.args.get('city2')
+    units = request.args.get('units')
 
-    # TODO: Make 2 API calls, one for each city. HINT: You may want to write a 
-    # helper function for this!
+    def get_weather_data(city, units):
+        """Fetch weather data for a city."""
+        params = {
+            'q': city,
+            'units': units,
+            'appid': API_KEY
+        }
+        response = requests.get(API_URL, params=params)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Error fetching data for {city}: {response.status_code} - {response.json().get('message')}")
+            return None
 
+    city1_data = get_weather_data(city1, units)
+    city2_data = get_weather_data(city2, units)
 
-    # TODO: Pass the information for both cities in the context. Make sure to
-    # pass info for the temperature, humidity, wind speed, and sunset time!
-    # HINT: It may be useful to create 2 new dictionaries, `city1_info` and 
-    # `city2_info`, to organize the data.
+    if not city1_data:
+        return render_template('error.html', error=f"Could not fetch data for {city1}.")
+    if not city2_data:
+        return render_template('error.html', error=f"Could not fetch data for {city2}.")
+
+    city1_info = {
+        'temp': city1_data.get('main', {}).get('temp', 'N/A'),
+        'humidity': city1_data.get('main', {}).get('humidity', 'N/A'),
+        'wind_speed': city1_data.get('wind', {}).get('speed', 'N/A'),
+        'sunset': datetime.fromtimestamp(city1_data['sys'].get('sunset', 0)) if city1_data['sys'].get('sunset') else 'N/A',
+        'name': city1_data.get('name', 'Unknown')
+    }
+
+    city2_info = {
+        'temp': city2_data.get('main', {}).get('temp', 'N/A'),
+        'humidity': city2_data.get('main', {}).get('humidity', 'N/A'),
+        'wind_speed': city2_data.get('wind', {}).get('speed', 'N/A'),
+        'sunset': datetime.fromtimestamp(city2_data['sys'].get('sunset', 0)) if city2_data['sys'].get('sunset') else 'N/A',
+        'name': city2_data.get('name', 'Unknown')
+    }
+
+    temp_diff = abs(city1_info['temp'] - city2_info['temp']) if city1_info['temp'] != 'N/A' and city2_info['temp'] != 'N/A' else 'N/A'
+
     context = {
-
+        'date': datetime.now().strftime('%A, %B %d, %Y'),
+        'units_letter': get_letter_for_units(units),
+        'city1_info': city1_info,
+        'city2_info': city2_info,
+        'temp_diff': temp_diff,
+        'abs': abs
     }
 
     return render_template('comparison_results.html', **context)
+
 
 
 if __name__ == '__main__':

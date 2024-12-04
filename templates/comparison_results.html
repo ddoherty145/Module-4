@@ -1,35 +1,26 @@
 {% extends 'base.html' %}
 {% block content %}
-
 <section class="weather-form">
-    {# 
-        TODO: Replace the hard-coded cities and date below with data from the 
-        server.
-    #}
-    <h1>Weather in [CITY1] and [CITY2]</h1>
-    <p>[TODAYS_DATE]</p>
-
-
-    {#
-        TODO: Add the temperature, description, and min & max temperature below.
-        Replace 'F' with the appropriate units.
-    #}
     <p>
-        It is [NUM_DEGREES] [UNITS] [WARMER/COLDER] in [CITY1] than in [CITY2] today.
-    </p>
-
-    <p>
-        The humidity in [CITY1] is [AMOUNT] [GREATER/LESS] than in [CITY2].
-    </p>
-
-    <p>
-        The wind speed in [CITY1] is [AMOUNT] [GREATER/LESS] than in [CITY2].
-    </p>
-
-    <p>
-        The sun sets in [CITY1] [HOURS] hours [EARLIER/LATER] than in [CITY2].
+        It is 
+        {% if city1_info.temp != 'N/A' and city2_info.temp != 'N/A' %}
+            {{ abs(city1_info.temp - city2_info.temp) }}°{{ units_letter }}
+            {{ 'warmer' if city1_info.temp > city2_info.temp else 'colder' }}
+        {% else %}
+            an unknown temperature difference
+        {% endif %}
+        in {{ city1_info.name }} than in {{ city2_info.name }} today.
     </p>
     
+    <p>
+        The humidity in {{ city1_info.name }} is 
+        {% if city1_info.humidity != 'N/A' and city2_info.humidity != 'N/A' %}
+            {{ abs(city1_info.humidity - city2_info.humidity) }}% 
+            {{ 'greater' if city1_info.humidity > city2_info.humidity else 'less' }}
+        {% else %}
+            an unknown difference
+        {% endif %}
+        than in {{ city2_info.name }}.
+    </p>
 </section>
-
 {% endblock %}
